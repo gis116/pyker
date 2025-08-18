@@ -113,6 +113,7 @@ Tab completion is automatically installed and works with:
 | `list` | Show all processes in table | `pyker list` |
 | `logs <name>` | Show process logs | `pyker logs bot -f` |
 | `info [name]` | Show detailed information | `pyker info bot` |
+| `uninstall` | Uninstall Pyker completely | `pyker uninstall` |
 
 ### Command Options
 
@@ -254,6 +255,18 @@ nano ~/.pyker/config.json
 
 # Or manually clean
 rm ~/.pyker/logs/*.log.*
+```
+
+**Q: How to completely remove Pyker?**
+```bash
+# Use the built-in uninstall command
+pyker uninstall
+
+# This will:
+# 1. Stop all running processes  
+# 2. Remove pyker executable
+# 3. Remove completion scripts
+# 4. Optionally remove logs and config
 ```
 
 **Q: "externally-managed-environment" error during installation**

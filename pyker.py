@@ -595,6 +595,106 @@ class Pyker:
             print(f"{self.BOLD}State file:{self.RESET} {self.state_file}")
             print(f"{self.BOLD}Logs directory:{self.RESET} {self.logs_dir}")
             print(f"{self.BOLD}Config file:{self.RESET} {self.state_file.parent / 'config.json'}")
+    
+    def uninstall(self):
+        """Uninstall Pyker with confirmation"""
+        print(f"\n{self.BOLD}{self.RED}⚠ Pyker Uninstallation{self.RESET}")
+        print(f"{self.YELLOW}This will:{self.RESET}")
+        print(f"  • Stop all running processes")
+        print(f"  • Remove Pyker executable")
+        print(f"  • Remove completion scripts")
+        print(f"  • Keep logs and config (optional cleanup)")
+        
+        # Show current processes
+        if self.processes:
+            running_processes = [name for name, info in self.processes.items() 
+                               if info.get('status') == 'running']
+            if running_processes:
+                print(f"\n{self.RED}Running processes that will be stopped:{self.RESET}")
+                for name in running_processes:
+                    print(f"  • {name}")
+        
+        print(f"\n{self.BOLD}Do you want to continue? [y/N]:{self.RESET} ", end="")
+        try:
+            response = input().strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            print(f"\n{self.YELLOW}[INFO]{self.RESET} Uninstallation cancelled")
+            return
+        
+        if response not in ['y', 'yes']:
+            print(f"{self.YELLOW}[INFO]{self.RESET} Uninstallation cancelled")
+            return
+        
+        # Stop all running processes
+        print(f"\n{self.YELLOW}Stopping all processes...{self.RESET}")
+        stopped_count = 0
+        for name, info in self.processes.items():
+            if info.get('status') == 'running':
+                if self.stop(name):
+                    stopped_count += 1
+        
+        if stopped_count > 0:
+            print(f"{self.GREEN}✓ Stopped {stopped_count} processes{self.RESET}")
+        
+        # Ask about data cleanup
+        print(f"\n{self.BOLD}Remove logs and configuration? [y/N]:{self.RESET} ", end="")
+        try:
+            cleanup_response = input().strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            cleanup_response = 'n'
+        
+        # Remove Pyker files
+        self._remove_pyker_files(cleanup_response in ['y', 'yes'])
+        
+        print(f"\n{self.GREEN}✓ Pyker has been uninstalled successfully{self.RESET}")
+        print(f"{self.BLUE}Thank you for using Pyker!{self.RESET}")
+    
+    def _remove_pyker_files(self, remove_data: bool):
+        """Remove Pyker installation files"""
+        import shutil
+        
+        # Find pyker executable
+        pyker_locations = [
+            Path.home() / ".local" / "bin" / "pyker",
+            Path("/usr/local/bin/pyker"),
+            Path("/usr/bin/pyker")
+        ]
+        
+        for location in pyker_locations:
+            if location.exists():
+                try:
+                    location.unlink()
+                    print(f"{self.GREEN}✓ Removed {location}{self.RESET}")
+                except Exception as e:
+                    print(f"{self.RED}✗ Failed to remove {location}: {e}{self.RESET}")
+        
+        # Remove completion scripts
+        completion_locations = [
+            Path.home() / ".local" / "share" / "bash-completion" / "completions" / "pyker",
+            Path.home() / ".oh-my-zsh" / "completions" / "_pyker",
+            Path.home() / ".local" / "share" / "zsh" / "site-functions" / "_pyker"
+        ]
+        
+        for location in completion_locations:
+            if location.exists():
+                try:
+                    location.unlink()
+                    print(f"{self.GREEN}✓ Removed completion {location.name}{self.RESET}")
+                except Exception as e:
+                    print(f"{self.RED}✗ Failed to remove completion: {e}{self.RESET}")
+        
+        # Remove data if requested
+        if remove_data:
+            pyker_dir = Path.home() / ".pyker"
+            if pyker_dir.exists():
+                try:
+                    shutil.rmtree(pyker_dir)
+                    print(f"{self.GREEN}✓ Removed data directory ~/.pyker{self.RESET}")
+                except Exception as e:
+                    print(f"{self.RED}✗ Failed to remove data directory: {e}{self.RESET}")
+        else:
+            print(f"{self.BLUE}ℹ Data directory ~/.pyker preserved{self.RESET}")
+            print(f"{self.BLUE}  You can manually remove it later if needed{self.RESET}")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -635,6 +735,9 @@ def main():
     info_parser = subparsers.add_parser('info', help='Show process information')
     info_parser.add_argument('name', nargs='?', help='Process name (optional, shows system info if not provided)')
     
+    # Uninstall command
+    uninstall_parser = subparsers.add_parser('uninstall', help='Uninstall Pyker completely')
+    
     # Handle help manually
     if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] in ['-h', '--help', 'help']):
         print(f"{Pyker.BOLD}{Pyker.CYAN}Pyker - Simple Python Process Manager{Pyker.RESET}")
@@ -647,6 +750,7 @@ def main():
         print(f"  {Pyker.GREEN}list{Pyker.RESET}                    - List all processes")
         print(f"  {Pyker.GREEN}logs{Pyker.RESET}    <name>          - Show process logs")
         print(f"  {Pyker.GREEN}info{Pyker.RESET}    [name]          - Show process/system information")
+        print(f"  {Pyker.GREEN}uninstall{Pyker.RESET}               - Uninstall Pyker completely")
         print(f"\n{Pyker.BOLD}Examples:{Pyker.RESET}")
         print(f"  pyker start bot script.py")
         print(f"  pyker list")
@@ -672,6 +776,7 @@ def main():
         print(f"  {Pyker.GREEN}list{Pyker.RESET}                    - List all processes")
         print(f"  {Pyker.GREEN}logs{Pyker.RESET}    <name>          - Show process logs")
         print(f"  {Pyker.GREEN}info{Pyker.RESET}    [name]          - Show process/system information")
+        print(f"  {Pyker.GREEN}uninstall{Pyker.RESET}               - Uninstall Pyker completely")
         print(f"\nUse '{Pyker.CYAN}pyker <command> --help{Pyker.RESET}' for more information on a command.")
         return
     
@@ -691,6 +796,8 @@ def main():
         pyker.logs(args.name, args.lines, args.follow)
     elif args.command == 'info':
         pyker.info(args.name)
+    elif args.command == 'uninstall':
+        pyker.uninstall()
 
 if __name__ == '__main__':
     main() 

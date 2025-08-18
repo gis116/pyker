@@ -6,7 +6,7 @@ _pyker_completion() {
     _init_completion || return
 
     # Main commands
-    local commands="start stop restart delete list logs info"
+    local commands="start stop restart delete list logs info uninstall"
     
     # Get current processes for name completion
     local processes=""
@@ -38,8 +38,8 @@ except:
                     # Complete with existing process names
                     COMPREPLY=($(compgen -W "$processes" -- "$cur"))
                     ;;
-                list)
-                    # No completion for list
+                list|uninstall)
+                    # No completion for list and uninstall
                     ;;
             esac
             ;;

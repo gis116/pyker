@@ -67,7 +67,7 @@ _pyker() {
                             ;;
                     esac
                     ;;
-                list)
+                list|uninstall)
                     # No additional arguments
                     ;;
             esac
@@ -86,6 +86,7 @@ _pyker_commands() {
         'list:List all processes'
         'logs:Show process logs'
         'info:Show process information'
+        'uninstall:Uninstall Pyker completely'
     )
     _describe 'commands' commands
 }
