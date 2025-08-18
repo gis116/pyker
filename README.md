@@ -244,6 +244,25 @@ nano ~/.pyker/config.json
 rm ~/.pyker/logs/*.log.*
 ```
 
+**Q: "externally-managed-environment" error during installation**
+```bash
+# This happens on newer Linux systems (PEP 668)
+# The installer will automatically try these solutions:
+
+# Option 1: System package manager (recommended)
+sudo apt install python3-psutil      # Ubuntu/Debian
+sudo dnf install python3-psutil      # Fedora
+sudo pacman -S python-psutil         # Arch Linux
+
+# Option 2: Using pipx
+pipx install psutil
+
+# Option 3: Virtual environment
+python3 -m venv venv
+venv/bin/pip install psutil
+# Then copy pyker to venv/bin/
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository

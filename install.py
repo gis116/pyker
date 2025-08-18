@@ -41,23 +41,64 @@ def check_python():
 def install_psutil():
     """Install psutil dependency"""
     print_colored("Installing psutil dependency...", Colors.YELLOW)
+    
+    # Try to import psutil first
     try:
-        # Try to import psutil first
         import psutil
         print_colored("✓ psutil is already installed", Colors.GREEN)
         return
     except ImportError:
         pass
     
+    # Try pip --user first
     try:
         subprocess.run([
             sys.executable, "-m", "pip", "install", "--user", "psutil"
-        ], check=True, capture_output=True)
-        print_colored("✓ psutil installed successfully", Colors.GREEN)
-    except subprocess.CalledProcessError as e:
-        print_colored("Error installing psutil:", Colors.RED)
-        print_colored("Please install it manually: pip install --user psutil", Colors.YELLOW)
-        sys.exit(1)
+        ], check=True, capture_output=True, stderr=subprocess.DEVNULL)
+        print_colored("✓ psutil installed via pip --user", Colors.GREEN)
+        return
+    except subprocess.CalledProcessError:
+        pass
+    
+    # Try system package managers
+    install_methods = [
+        (["apt", "install", "-y", "python3-psutil"], "apt (Ubuntu/Debian)"),
+        (["yum", "install", "-y", "python3-psutil"], "yum (CentOS/RHEL)"),
+        (["dnf", "install", "-y", "python3-psutil"], "dnf (Fedora)"),
+        (["pacman", "-S", "--noconfirm", "python-psutil"], "pacman (Arch Linux)")
+    ]
+    
+    for cmd, name in install_methods:
+        if shutil.which(cmd[0]):
+            try:
+                print_colored(f"Trying to install via {name}...", Colors.YELLOW)
+                subprocess.run(["sudo"] + cmd, check=True, capture_output=True)
+                print_colored(f"✓ psutil installed via {name}", Colors.GREEN)
+                return
+            except subprocess.CalledProcessError:
+                continue
+    
+    # Try pipx
+    if shutil.which("pipx"):
+        try:
+            print_colored("Trying to install via pipx...", Colors.YELLOW)
+            subprocess.run(["pipx", "install", "psutil", "--include-deps"], 
+                         check=True, capture_output=True)
+            print_colored("✓ psutil installed via pipx", Colors.GREEN)
+            return
+        except subprocess.CalledProcessError:
+            pass
+    
+    # All methods failed
+    print_colored("Could not install psutil automatically", Colors.RED)
+    print_colored("Please install psutil manually using one of these methods:", Colors.YELLOW)
+    print_colored("  sudo apt install python3-psutil     # Ubuntu/Debian", Colors.CYAN)
+    print_colored("  sudo yum install python3-psutil     # CentOS/RHEL", Colors.CYAN)
+    print_colored("  sudo dnf install python3-psutil     # Fedora", Colors.CYAN)
+    print_colored("  sudo pacman -S python-psutil        # Arch Linux", Colors.CYAN)
+    print_colored("  pipx install psutil                 # Using pipx", Colors.CYAN)
+    print_colored("  python3 -m venv venv && venv/bin/pip install psutil  # Virtual env", Colors.CYAN)
+    sys.exit(1)
 
 def setup_local_bin():
     """Setup ~/.local/bin directory"""

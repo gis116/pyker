@@ -48,7 +48,35 @@ fi
 
 # Install psutil
 echo -e "${YELLOW}Installing psutil dependency...${NC}"
-python3 -m pip install --user psutil
+
+# Try different installation methods for psutil
+if python3 -c "import psutil" 2>/dev/null; then
+    echo -e "${GREEN}✓ psutil is already installed${NC}"
+elif python3 -m pip install --user psutil 2>/dev/null; then
+    echo -e "${GREEN}✓ psutil installed via pip --user${NC}"
+elif command -v apt &> /dev/null && sudo apt install -y python3-psutil 2>/dev/null; then
+    echo -e "${GREEN}✓ psutil installed via apt${NC}"
+elif command -v yum &> /dev/null && sudo yum install -y python3-psutil 2>/dev/null; then
+    echo -e "${GREEN}✓ psutil installed via yum${NC}"
+elif command -v dnf &> /dev/null && sudo dnf install -y python3-psutil 2>/dev/null; then
+    echo -e "${GREEN}✓ psutil installed via dnf${NC}"
+elif command -v pacman &> /dev/null && sudo pacman -S --noconfirm python-psutil 2>/dev/null; then
+    echo -e "${GREEN}✓ psutil installed via pacman${NC}"
+elif command -v pipx &> /dev/null; then
+    echo -e "${YELLOW}Using pipx to install psutil...${NC}"
+    pipx install psutil --include-deps
+    echo -e "${GREEN}✓ psutil installed via pipx${NC}"
+else
+    echo -e "${RED}Could not install psutil automatically${NC}"
+    echo -e "${YELLOW}Please install psutil manually using one of these methods:${NC}"
+    echo -e "  ${CYAN}sudo apt install python3-psutil${NC}     # Ubuntu/Debian"
+    echo -e "  ${CYAN}sudo yum install python3-psutil${NC}     # CentOS/RHEL"
+    echo -e "  ${CYAN}sudo dnf install python3-psutil${NC}     # Fedora"
+    echo -e "  ${CYAN}sudo pacman -S python-psutil${NC}        # Arch Linux"
+    echo -e "  ${CYAN}pipx install psutil${NC}                 # Using pipx"
+    echo -e "  ${CYAN}python3 -m venv venv && venv/bin/pip install psutil${NC}  # Virtual env"
+    exit 1
+fi
 
 # Download pyker.py if not present
 if [ ! -f "pyker.py" ]; then
