@@ -127,6 +127,70 @@ fi
 # Create pyker directory
 mkdir -p ~/.pyker/logs
 
+# Install bash completion
+echo -e "${YELLOW}Setting up bash completion...${NC}"
+mkdir -p ~/.local/share/bash-completion/completions
+
+# Download completion script if not present
+if [ ! -f "completions/pyker-completion.bash" ]; then
+    echo -e "${YELLOW}Downloading bash completion...${NC}"
+    mkdir -p completions
+    if command -v curl &> /dev/null; then
+        curl -sSL https://raw.githubusercontent.com/username/pyker/main/completions/pyker-completion.bash -o completions/pyker-completion.bash
+    elif command -v wget &> /dev/null; then
+        wget -q https://raw.githubusercontent.com/username/pyker/main/completions/pyker-completion.bash -O completions/pyker-completion.bash
+    fi
+fi
+
+# Install bash completion
+if [ -f "completions/pyker-completion.bash" ]; then
+    cp completions/pyker-completion.bash ~/.local/share/bash-completion/completions/pyker
+    echo -e "${GREEN}✓ Bash completion installed${NC}"
+else
+    echo -e "${YELLOW}⚠ Bash completion not available (optional)${NC}"
+fi
+
+# Install zsh completion if zsh is available
+if command -v zsh &> /dev/null; then
+    echo -e "${YELLOW}Setting up zsh completion...${NC}"
+    
+    # Create zsh completion directory
+    if [[ -d ~/.oh-my-zsh ]]; then
+        # Oh My Zsh
+        ZSH_COMP_DIR=~/.oh-my-zsh/completions
+    else
+        # Standard zsh
+        ZSH_COMP_DIR=~/.local/share/zsh/site-functions
+    fi
+    
+    mkdir -p "$ZSH_COMP_DIR"
+    
+    # Download zsh completion if not present
+    if [ ! -f "completions/_pyker" ]; then
+        echo -e "${YELLOW}Downloading zsh completion...${NC}"
+        mkdir -p completions
+        if command -v curl &> /dev/null; then
+            curl -sSL https://raw.githubusercontent.com/username/pyker/main/completions/_pyker -o completions/_pyker
+        elif command -v wget &> /dev/null; then
+            wget -q https://raw.githubusercontent.com/username/pyker/main/completions/_pyker -O completions/_pyker
+        fi
+    fi
+    
+    # Install zsh completion
+    if [ -f "completions/_pyker" ]; then
+        cp completions/_pyker "$ZSH_COMP_DIR/_pyker"
+        echo -e "${GREEN}✓ Zsh completion installed${NC}"
+        
+        # Add to fpath if needed
+        if [[ ! -d ~/.oh-my-zsh ]] && ! grep -q "fpath=.*$ZSH_COMP_DIR" ~/.zshrc 2>/dev/null; then
+            echo "fpath=(~/.local/share/zsh/site-functions \$fpath)" >> ~/.zshrc
+            echo -e "${BLUE}Added completion directory to ~/.zshrc${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠ Zsh completion not available (optional)${NC}"
+    fi
+fi
+
 echo ""
 echo -e "${GREEN}✓ Pyker installed successfully!${NC}"
 echo ""

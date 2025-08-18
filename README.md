@@ -17,6 +17,7 @@ A lightweight, user-friendly tool for managing Python scripts. Run Python proces
 - 🎨 **Color-coded Status** - Visual status indicators with symbols
 - ⚡ **Fast Operations** - Start, stop, restart processes instantly
 - 📋 **Detailed Info** - Get comprehensive process information
+- ⌨️ **Tab Completion** - Auto-complete commands and process names
 
 ## 🔧 Installation
 
@@ -89,6 +90,17 @@ pyker restart mybot
 # Delete a process
 pyker delete mybot
 ```
+
+## ⌨️ Tab Completion
+
+Tab completion is automatically installed and works with:
+
+- **Commands**: `pyker <TAB>` shows available commands
+- **Process names**: `pyker stop <TAB>` completes with existing processes  
+- **Files**: `pyker start mybot <TAB>` completes Python file paths
+- **Options**: `pyker logs mybot <TAB>` shows available flags
+
+*Restart your terminal after installation to enable completion.*
 
 ## 📋 Commands
 

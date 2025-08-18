@@ -1,0 +1,93 @@
+#compdef pyker
+# Zsh completion for pyker
+
+# Get list of processes from JSON file
+_pyker_processes() {
+    local processes
+    if [[ -f ~/.pyker/processes.json ]]; then
+        processes=(${(f)"$(python3 -c "
+import json
+try:
+    with open('$HOME/.pyker/processes.json', 'r') as f:
+        data = json.load(f)
+        for name in data.keys():
+            print(name)
+except:
+    pass
+" 2>/dev/null)"})
+        _describe 'processes' processes
+    fi
+}
+
+# Get Python files in current directory
+_pyker_python_files() {
+    _files -g "*.py"
+}
+
+# Main completion function
+_pyker() {
+    local context state line
+    typeset -A opt_args
+
+    _arguments -C \
+        '1: :_pyker_commands' \
+        '*:: :->args'
+
+    case $state in
+        args)
+            case $words[1] in
+                start)
+                    case $CURRENT in
+                        2)
+                            _message "process name"
+                            ;;
+                        3)
+                            _pyker_python_files
+                            ;;
+                        4)
+                            _arguments \
+                                '--auto-restart[Enable automatic restart on failure]'
+                            ;;
+                    esac
+                    ;;
+                stop|restart|delete|info)
+                    _pyker_processes
+                    ;;
+                logs)
+                    case $CURRENT in
+                        2)
+                            _pyker_processes
+                            ;;
+                        3)
+                            _arguments \
+                                '-f[Follow log output]' \
+                                '--follow[Follow log output]' \
+                                '-n[Number of lines to show]:lines:(10 20 50 100 200 500)' \
+                                '--lines[Number of lines to show]:lines:(10 20 50 100 200 500)'
+                            ;;
+                    esac
+                    ;;
+                list)
+                    # No additional arguments
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+# Command definitions
+_pyker_commands() {
+    local commands
+    commands=(
+        'start:Start a new process'
+        'stop:Stop a running process'
+        'restart:Restart a process'
+        'delete:Delete a process from list'
+        'list:List all processes'
+        'logs:Show process logs'
+        'info:Show process information'
+    )
+    _describe 'commands' commands
+}
+
+_pyker "$@" 

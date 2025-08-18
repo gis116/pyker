@@ -153,6 +153,50 @@ def create_pyker_dir():
     logs_dir.mkdir(parents=True, exist_ok=True)
     print_colored("✓ ~/.pyker directory structure created", Colors.GREEN)
 
+def setup_completions():
+    """Setup shell completions"""
+    print_colored("Setting up shell completions...", Colors.YELLOW)
+    
+    # Setup bash completion
+    bash_comp_dir = Path.home() / ".local" / "share" / "bash-completion" / "completions"
+    bash_comp_dir.mkdir(parents=True, exist_ok=True)
+    
+    bash_comp_file = Path("completions/pyker-completion.bash")
+    if bash_comp_file.exists():
+        shutil.copy2(bash_comp_file, bash_comp_dir / "pyker")
+        print_colored("✓ Bash completion installed", Colors.GREEN)
+    else:
+        print_colored("⚠ Bash completion file not found (optional)", Colors.YELLOW)
+    
+    # Setup zsh completion if zsh is available
+    if shutil.which("zsh"):
+        # Determine zsh completion directory
+        oh_my_zsh = Path.home() / ".oh-my-zsh"
+        if oh_my_zsh.exists():
+            zsh_comp_dir = oh_my_zsh / "completions"
+        else:
+            zsh_comp_dir = Path.home() / ".local" / "share" / "zsh" / "site-functions"
+        
+        zsh_comp_dir.mkdir(parents=True, exist_ok=True)
+        
+        zsh_comp_file = Path("completions/_pyker")
+        if zsh_comp_file.exists():
+            shutil.copy2(zsh_comp_file, zsh_comp_dir / "_pyker")
+            print_colored("✓ Zsh completion installed", Colors.GREEN)
+            
+            # Add to fpath if needed (non-oh-my-zsh)
+            if not oh_my_zsh.exists():
+                zshrc = Path.home() / ".zshrc"
+                fpath_line = f"fpath=({zsh_comp_dir} $fpath)"
+                if zshrc.exists():
+                    zshrc_content = zshrc.read_text()
+                    if str(zsh_comp_dir) not in zshrc_content:
+                        with open(zshrc, 'a') as f:
+                            f.write(f"\n{fpath_line}\n")
+                        print_colored("Added completion directory to ~/.zshrc", Colors.BLUE)
+        else:
+            print_colored("⚠ Zsh completion file not found (optional)", Colors.YELLOW)
+
 def main():
     print_colored("Pyker - Simple Python Process Manager", Colors.BOLD + Colors.CYAN)
     print_colored("=" * 50, Colors.CYAN)
@@ -162,6 +206,7 @@ def main():
     install_psutil()
     local_bin = install_pyker()
     create_pyker_dir()
+    setup_completions()
     path_ok = check_path(local_bin)
     
     print()
