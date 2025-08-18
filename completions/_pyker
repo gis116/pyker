@@ -44,9 +44,10 @@ _pyker() {
                         3)
                             _pyker_python_files
                             ;;
-                        4)
+                        *)
                             _arguments \
-                                '--auto-restart[Enable automatic restart on failure]'
+                                '--auto-restart[Enable automatic restart on failure]' \
+                                '--venv=[Virtual environment path]:directory:_path_files -/'
                             ;;
                     esac
                     ;;

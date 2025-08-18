@@ -72,6 +72,9 @@ export PATH="$HOME/.local/bin:$PATH"
 # Start a Python script
 pyker start mybot /path/to/script.py
 
+# Start with virtual environment
+pyker start webapp app.py --venv ./venv
+
 # List all processes
 pyker list
 
@@ -102,6 +105,26 @@ Tab completion is automatically installed and works with:
 
 *Restart your terminal after installation to enable completion.*
 
+## 🐍 Virtual Environment Support
+
+Pyker supports running scripts with virtual environments:
+
+```bash
+# Using relative path
+pyker start myapp app.py --venv ./venv
+
+# Using absolute path  
+pyker start worker worker.py --venv /home/user/projects/myproject/venv
+
+# Works with conda environments too
+pyker start analyzer data.py --venv /home/user/miniconda3/envs/myenv
+```
+
+**Requirements:**
+- Virtual environment must exist and be properly set up
+- Pyker automatically detects Python executable in `bin/python` (Linux/macOS) or `Scripts/python.exe` (Windows)
+- Environment information is saved and used during restarts
+
 ## 📋 Commands
 
 | Command | Description | Example |
@@ -118,6 +141,7 @@ Tab completion is automatically installed and works with:
 ### Command Options
 
 - `start --auto-restart` - Enable automatic restart on failure
+- `start --venv PATH` - Use virtual environment (e.g., `./venv`, `/path/to/venv`)
 - `logs -f` - Follow logs in real-time
 - `logs -n 100` - Show last 100 lines
 
@@ -171,6 +195,8 @@ Memory: 45.2 MB
 Started: 2025-08-19 09:30:15
 Log file: /home/user/.pyker/logs/mybot.log
 Auto restart: No
+Virtual env: /home/user/myproject/venv
+Python executable: /home/user/myproject/venv/bin/python
 ```
 
 ## ⚙️ Configuration

@@ -147,7 +147,7 @@ class Pyker:
         # Create new empty log file
         log_file.touch()
     
-    def start(self, name: str, script_path: str, auto_restart: bool = False):
+    def start(self, name: str, script_path: str, auto_restart: bool = False, venv_path: str = None):
         """Start a process"""
         script_path = os.path.abspath(script_path)
         
@@ -172,13 +172,18 @@ class Pyker:
         # Rotate log if needed
         self._rotate_log_if_needed(log_file)
         
+        # Determine Python executable (venv or system)
+        python_exe = self._get_python_executable(venv_path)
+        if not python_exe:
+            return False
+        
         # Start process
         try:
             # Open log file for writing
             log_handle = open(log_file, 'a', encoding='utf-8')
             
             process = subprocess.Popen(
-                [sys.executable, '-u', script_path],
+                [python_exe, '-u', script_path],
                 stdout=log_handle,
                 stderr=subprocess.STDOUT,
                 cwd=os.path.dirname(script_path) or '.'
@@ -188,6 +193,8 @@ class Pyker:
             self.processes[name] = {
                 'pid': process.pid,
                 'script_path': script_path,
+                'venv_path': venv_path,
+                'python_exe': python_exe,
                 'status': 'running',
                 'start_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 'log_file': str(log_file),
@@ -266,7 +273,8 @@ class Pyker:
         return self.start(
             name,
             process_info['script_path'],
-            process_info.get('auto_restart', False)
+            process_info.get('auto_restart', False),
+            process_info.get('venv_path')
         )
     
     def delete(self, name: str):
@@ -580,6 +588,15 @@ class Pyker:
             
             auto_restart = info.get('auto_restart', False)
             print(f"{self.BOLD}Auto restart:{self.RESET} {'Yes' if auto_restart else 'No'}")
+            
+            venv_path = info.get('venv_path')
+            if venv_path:
+                print(f"{self.BOLD}Virtual env:{self.RESET} {venv_path}")
+                python_exe = info.get('python_exe')
+                if python_exe:
+                    print(f"{self.BOLD}Python executable:{self.RESET} {python_exe}")
+            else:
+                print(f"{self.BOLD}Virtual env:{self.RESET} System Python")
         else:
             # Show overall system info
             for name in self.processes:
@@ -695,6 +712,39 @@ class Pyker:
         else:
             print(f"{self.BLUE}ℹ Data directory ~/.pyker preserved{self.RESET}")
             print(f"{self.BLUE}  You can manually remove it later if needed{self.RESET}")
+    
+    def _get_python_executable(self, venv_path: str = None):
+        """Get Python executable from venv or system"""
+        if venv_path:
+            # Resolve venv path
+            venv_path = os.path.expanduser(venv_path)
+            if not os.path.isabs(venv_path):
+                venv_path = os.path.abspath(venv_path)
+            
+            # Check if venv directory exists
+            if not os.path.exists(venv_path):
+                print(f"{self.RED}[ERROR]{self.RESET} Virtual environment not found: {venv_path}")
+                return None
+            
+            # Try different Python executable paths in venv
+            possible_paths = [
+                os.path.join(venv_path, 'bin', 'python'),      # Linux/macOS
+                os.path.join(venv_path, 'bin', 'python3'),     # Linux/macOS
+                os.path.join(venv_path, 'Scripts', 'python.exe'),  # Windows
+                os.path.join(venv_path, 'Scripts', 'python3.exe'), # Windows
+            ]
+            
+            for python_exe in possible_paths:
+                if os.path.exists(python_exe) and os.access(python_exe, os.X_OK):
+                    print(f"{self.BLUE}[INFO]{self.RESET} Using Python from venv: {python_exe}")
+                    return python_exe
+            
+            print(f"{self.RED}[ERROR]{self.RESET} No Python executable found in venv: {venv_path}")
+            print(f"{self.YELLOW}[HINT]{self.RESET} Expected paths: bin/python or Scripts/python.exe")
+            return None
+        else:
+            # Use system Python
+            return sys.executable
 
 def main():
     parser = argparse.ArgumentParser(
@@ -709,6 +759,7 @@ def main():
     start_parser.add_argument('name', help='Process name')
     start_parser.add_argument('script', help='Python script path')
     start_parser.add_argument('--auto-restart', action='store_true', help='Auto restart on failure')
+    start_parser.add_argument('--venv', help='Virtual environment path (e.g., ./venv or /path/to/venv)')
     
     # Stop command
     stop_parser = subparsers.add_parser('stop', help='Stop a process')
@@ -743,7 +794,7 @@ def main():
         print(f"{Pyker.BOLD}{Pyker.CYAN}Pyker - Simple Python Process Manager{Pyker.RESET}")
         print(f"\n{Pyker.BOLD}Usage:{Pyker.RESET} pyker <command> [options]")
         print(f"\n{Pyker.BOLD}Available commands:{Pyker.RESET}")
-        print(f"  {Pyker.GREEN}start{Pyker.RESET}   <name> <script>  - Start a new process")
+        print(f"  {Pyker.GREEN}start{Pyker.RESET}   <name> <script>  - Start a new process [--venv PATH]")
         print(f"  {Pyker.GREEN}stop{Pyker.RESET}    <name>          - Stop a process")  
         print(f"  {Pyker.GREEN}restart{Pyker.RESET} <name>          - Restart a process")
         print(f"  {Pyker.GREEN}delete{Pyker.RESET}  <name>          - Delete a process")
@@ -753,6 +804,7 @@ def main():
         print(f"  {Pyker.GREEN}uninstall{Pyker.RESET}               - Uninstall Pyker completely")
         print(f"\n{Pyker.BOLD}Examples:{Pyker.RESET}")
         print(f"  pyker start bot script.py")
+        print(f"  pyker start webapp app.py --venv ./venv")
         print(f"  pyker list")
         print(f"  pyker logs bot -f")
         print(f"  pyker info bot")
@@ -783,7 +835,7 @@ def main():
     pyker = Pyker()
     
     if args.command == 'start':
-        pyker.start(args.name, args.script, args.auto_restart)
+        pyker.start(args.name, args.script, args.auto_restart, args.venv)
     elif args.command == 'stop':
         pyker.stop(args.name)
     elif args.command == 'restart':

@@ -55,16 +55,28 @@ except:
                     ;;
             esac
             ;;
-        4)
+        *)
             case ${words[1]} in
                 start)
-                    # Complete with start options
-                    COMPREPLY=($(compgen -W "--auto-restart" -- "$cur"))
+                    # Complete with start options based on current word
+                    case "$cur" in
+                        --venv=*)
+                            # Complete directory paths for venv
+                            local venv_path="${cur#--venv=}"
+                            COMPREPLY=($(compgen -d -- "$venv_path"))
+                            ;;
+                        *)
+                            COMPREPLY=($(compgen -W "--auto-restart --venv=" -- "$cur"))
+                            ;;
+                    esac
                     ;;
                 logs)
                     if [[ ${words[3]} == "-n" || ${words[3]} == "--lines" ]]; then
                         # Complete with numbers for line count
                         COMPREPLY=($(compgen -W "10 20 50 100 200 500" -- "$cur"))
+                    else
+                        # Complete with log options
+                        COMPREPLY=($(compgen -W "-f --follow -n --lines" -- "$cur"))
                     fi
                     ;;
             esac
