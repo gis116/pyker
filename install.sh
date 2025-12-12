@@ -82,9 +82,9 @@ fi
 if [ ! -f "pyker.py" ]; then
     echo -e "${YELLOW}Downloading pyker.py...${NC}"
     if command -v curl &> /dev/null; then
-        curl -sSL https://raw.githubusercontent.com/username/pyker/main/pyker.py -o pyker.py
+        curl -sSL https://raw.githubusercontent.com/gis116/pyker/main/pyker.py -o pyker.py
     elif command -v wget &> /dev/null; then
-        wget -q https://raw.githubusercontent.com/username/pyker/main/pyker.py
+        wget -q https://raw.githubusercontent.com/gis116/pyker/main/pyker.py
     else
         echo -e "${RED}Error: Neither curl nor wget is available${NC}"
         echo -e "${YELLOW}Please download pyker.py manually and run this script again${NC}"
@@ -136,9 +136,9 @@ if [ ! -f "completions/pyker-completion.bash" ]; then
     echo -e "${YELLOW}Downloading bash completion...${NC}"
     mkdir -p completions
     if command -v curl &> /dev/null; then
-        curl -sSL https://raw.githubusercontent.com/username/pyker/main/completions/pyker-completion.bash -o completions/pyker-completion.bash
+        curl -sSL https://raw.githubusercontent.com/gis116/pyker/main/completions/pyker-completion.bash -o completions/pyker-completion.bash
     elif command -v wget &> /dev/null; then
-        wget -q https://raw.githubusercontent.com/username/pyker/main/completions/pyker-completion.bash -O completions/pyker-completion.bash
+        wget -q https://raw.githubusercontent.com/gis116/pyker/main/completions/pyker-completion.bash -O completions/pyker-completion.bash
     fi
 fi
 
@@ -170,9 +170,9 @@ if command -v zsh &> /dev/null; then
         echo -e "${YELLOW}Downloading zsh completion...${NC}"
         mkdir -p completions
         if command -v curl &> /dev/null; then
-            curl -sSL https://raw.githubusercontent.com/username/pyker/main/completions/_pyker -o completions/_pyker
+            curl -sSL https://raw.githubusercontent.com/gis116/pyker/main/completions/_pyker -o completions/_pyker
         elif command -v wget &> /dev/null; then
-            wget -q https://raw.githubusercontent.com/username/pyker/main/completions/_pyker -O completions/_pyker
+            wget -q https://raw.githubusercontent.com/gis116/pyker/main/completions/_pyker -O completions/_pyker
         fi
     fi
     
